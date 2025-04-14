@@ -16,6 +16,8 @@ public class InventoryService {
     @Autowired
     private InventoryRepo inventoryRepo;
 
+
+
     public Inventory createInventory(InventoryRequestDto inventoryRequestDto) {
         Inventory inventory = Inventory.builder()
                 .name(inventoryRequestDto.getName())
@@ -39,7 +41,7 @@ public class InventoryService {
         inventory.setName(inventoryRequestDto.getName());
         inventory.setDescription(inventoryRequestDto.getDescription());
         inventory.setQuantity(inventoryRequestDto.getQuantity());
-        inventory.setPrice(inventoryRequestDto.getPrice());
+//        inventory.setPrice(inventoryRequestDto.getPrice());
         return inventoryRepo.save(inventory);
     }
 

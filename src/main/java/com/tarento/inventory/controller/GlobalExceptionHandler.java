@@ -1,6 +1,7 @@
 package com.tarento.inventory.controller;
 
 import com.tarento.inventory.controller.response.ErrorResponseDto;
+import com.tarento.inventory.exception.InvalidSearchCriteriaException;
 import com.tarento.inventory.exception.InventoryNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +10,9 @@ import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -24,5 +28,13 @@ public class GlobalExceptionHandler {
         ObjectError firstError = bindingResult.getAllErrors().stream().findFirst().orElse(null);
         String errorMessage = firstError != null ? firstError.getDefaultMessage() : "Unknown validation error";
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponseDto(errorMessage));
+    }
+
+
+    @ExceptionHandler(InvalidSearchCriteriaException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidSearchCriteria(InvalidSearchCriteriaException ex) {
+        Map<String, String> response = new HashMap<>();
+        response.put("error", ex.getMessage());
+        return ResponseEntity.badRequest().body(response);
     }
 }

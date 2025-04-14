@@ -70,4 +70,5 @@ public class InventoryController {
                 .updatedAt(inventory.getUpdatedAt())
                 .build();
     }
+
 }
