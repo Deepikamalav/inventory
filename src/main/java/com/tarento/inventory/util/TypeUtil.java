@@ -1,7 +1,6 @@
 package com.tarento.inventory.util;
 
 import co.elastic.clients.elasticsearch._types.FieldValue;
-import co.elastic.clients.json.JsonData;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
