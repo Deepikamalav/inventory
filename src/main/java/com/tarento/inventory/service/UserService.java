@@ -118,60 +118,6 @@ public class UserService {
         return userRepository.save(updatedUser);
     }
 
-
-    public PaginatedResponse searchUsers(SearchFilter filter, int page, int size, List<String> selectedFields) throws IOException {
-        List<Map<String, Object>> users = new ArrayList<>();
-
-        Query query = Query.of(q -> q.bool(b -> {
-            List<Query> queries = new ArrayList<>();
-            for (SearchCriteria criteria : filter.getFilters()) {
-                validateCriteria(criteria);
-                Query subQuery = criteria.getOperation().getQuery(criteria.getField(), criteria.getValue());
-                queries.add(subQuery);
-            }
-            b.must(queries);
-            return b;
-        }));
-
-        SearchRequest searchRequest = new SearchRequest.Builder()
-                .index("users")
-                .query(query)
-                .aggregations("avg_salary", a -> a.avg(avg -> avg.field("salary")))
-                .from(page * size)
-                .size(size)
-                .build();
-
-        System.out.println(searchRequest + "searchRequest");
-
-
-        System.out.println(elasticsearchClient.search(searchRequest, Map.class));
-
-        SearchResponse<ElasticSearchUser> response =
-                elasticsearchClient.search(searchRequest, ElasticSearchUser.class);
-
-        System.out.println(response + "response");
-        long totalElements = response.hits().total().value();
-        for (Hit<ElasticSearchUser> hit : response.hits().hits()) {
-            ElasticSearchUser user = hit.source();
-            if (user != null) {
-                user.setId(hit.id());
-                Map<String, Object> userMap = new HashMap<>();
-
-                for (String field : selectedFields) {
-                    Object value = getFieldValue(user, field);
-                    userMap.put(field, value);
-                }
-
-
-                users.add(userMap);
-            }
-        }
-
-        int totalPages = (int) Math.ceil((double) totalElements / size);
-        return new PaginatedResponse(totalElements, totalPages, users);
-    }
-
-
     private Object getFieldValue(ElasticSearchUser user, String fieldName) {
         try {
             BeanInfo beanInfo = Introspector.getBeanInfo(ElasticSearchUser.class);
@@ -263,6 +209,55 @@ public class UserService {
         }
 
         return str;
+    }
+
+
+    public PaginatedResponse searchUsers(SimplifiedSearchFilter simplifiedFilter, int page, int size) throws IOException {
+        SearchFilter filter = convertToSearchFilter(simplifiedFilter);
+        List<Map<String, Object>> users = new ArrayList<>();
+
+        Query query = Query.of(q -> q.bool(b -> {
+            List<Query> queries = new ArrayList<>();
+            for (SearchCriteria criteria : filter.getFilters()) {
+                validateCriteria(criteria);
+                Query subQuery = criteria.getOperation().getQuery(criteria.getField(), criteria.getValue());
+                queries.add(subQuery);
+            }
+            b.must(queries);
+            return b;
+        }));
+
+        SearchRequest searchRequest = new SearchRequest.Builder()
+                .index("users")
+                .query(query)
+                .from(page * size)
+                .size(size)
+                .build();
+
+        System.out.println(searchRequest + "searchRequest");
+
+        SearchResponse<ElasticSearchUser> response = elasticsearchClient.search(searchRequest, ElasticSearchUser.class);
+
+        System.out.println(response + "response");
+
+        long totalElements = response.hits().total().value();
+        for (Hit<ElasticSearchUser> hit : response.hits().hits()) {
+            ElasticSearchUser user = hit.source();
+            if (user != null) {
+                user.setId(hit.id());
+                Map<String, Object> userMap = new HashMap<>();
+
+                for (String field : simplifiedFilter.getFields()) {
+                    Object value = getFieldValue(user, field);
+                    userMap.put(field, value);
+                }
+
+                users.add(userMap);
+            }
+        }
+
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        return new PaginatedResponse(totalElements, totalPages, users);
     }
 
 

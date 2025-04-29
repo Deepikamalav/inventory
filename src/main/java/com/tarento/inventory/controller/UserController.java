@@ -94,13 +94,12 @@ public class UserController {
         return null;
     }
 
+
     @PostMapping("/search")
     public PaginatedResponse searchUsersSimple(@RequestBody SimplifiedSearchFilter simplifiedFilter,
                                                @RequestParam("page") int page,
-                                               @RequestParam("size") int size
-    ) throws IOException {
-        SearchFilter filter = userService.convertToSearchFilter(simplifiedFilter);
-        return userService.searchUsers(filter, page, size, simplifiedFilter.getFields());
+                                               @RequestParam("size") int size) throws IOException {
+        return userService.searchUsers(simplifiedFilter, page, size);
     }
 
     @GetMapping("/aggregation")
